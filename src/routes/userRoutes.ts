@@ -8,7 +8,12 @@ import {
   getSavedJobs,
   getAvailableAssessments,
   startAssessment,
-  submitAssessment
+  submitAssessment,
+  getUserPayments,
+  getUserDocuments,
+  getUserOffers,
+  getUserMessages,
+  sendMessageToAdmin
 } from '../controllers/userController';
 
 const router = Router();
@@ -151,5 +156,11 @@ router.post('/assessments/:assessmentId/start', startAssessment as any);
  *         description: Assessment submitted successfully
  */
 router.post('/assessments/:assessmentId/submit', submitAssessment as any);
+
+router.get('/payments', getUserPayments as any);
+router.get('/documents', getUserDocuments as any);
+router.get('/offers', getUserOffers as any);
+router.get('/messages', getUserMessages as any);
+router.post('/messages', sendMessageToAdmin as any);
 
 export default router;

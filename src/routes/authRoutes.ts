@@ -28,7 +28,7 @@ const router = Router();
  *   description: User authentication and account management
  */
 
-// Public routes with rate limiting
+// Public routes with rate limiting 
 router.post('/register', authLimiter, registerValidation, handleValidationErrors, register);
 router.post('/login', authLimiter, loginValidation, handleValidationErrors, login);
 router.get('/verify-email/:token', verifyEmail);

@@ -248,3 +248,64 @@ export const submitAssessment = async (req: AuthRequest, res: Response) => {
     return ApiResponse.error(res, 'Failed to submit assessment', 500);
   }
 };
+
+export const getUserPayments = async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.user?.id;
+    const payments: any[] = [];
+    return ApiResponse.success(res, payments, 'Payments retrieved successfully');
+  } catch (error) {
+    return ApiResponse.error(res, 'Failed to retrieve payments', 500);
+  }
+};
+
+export const getUserDocuments = async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.user?.id;
+    const documents: any[] = [];
+    return ApiResponse.success(res, documents, 'Documents retrieved successfully');
+  } catch (error) {
+    return ApiResponse.error(res, 'Failed to retrieve documents', 500);
+  }
+};
+
+export const getUserOffers = async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.user?.id;
+    const offers: any[] = [];
+    return ApiResponse.success(res, offers, 'Offers retrieved successfully');
+  } catch (error) {
+    return ApiResponse.error(res, 'Failed to retrieve offers', 500);
+  }
+};
+
+export const getUserMessages = async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.user?.id;
+    const messages: any[] = [];
+    return ApiResponse.success(res, messages, 'Messages retrieved successfully');
+  } catch (error) {
+    return ApiResponse.error(res, 'Failed to retrieve messages', 500);
+  }
+};
+
+export const sendMessageToAdmin = async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.user?.id;
+    const { message } = req.body;
+    
+    // Mock message sending - in real app, this would save to database
+    const newMessage = {
+      _id: Date.now().toString(),
+      from: userId,
+      to: 'admin',
+      message,
+      timestamp: new Date(),
+      read: false
+    };
+    
+    return ApiResponse.success(res, newMessage, 'Message sent successfully');
+  } catch (error) {
+    return ApiResponse.error(res, 'Failed to send message', 500);
+  }
+};
