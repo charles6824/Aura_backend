@@ -30,6 +30,9 @@ import companyRoutes from './routes/companyRoutes';
 import examRoutes from './routes/examRoutes';
 import dashboardRoutes from './routes/dashboardRoutes';
 import newsletterRoutes from './routes/newsletterRoutes';
+import applicationWorkflowRoutes from './routes/applicationWorkflowRoutes';
+import companyDashboardRoutes from './routes/companyDashboardRoutes';
+import userRoutes from './routes/userRoutes';
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -96,6 +99,9 @@ app.use(`${API_PREFIX}/companies`, companyRoutes);
 app.use(`${API_PREFIX}/exam`, examRoutes);
 app.use(`${API_PREFIX}/dashboard`, dashboardRoutes);
 app.use(`${API_PREFIX}/newsletter`, newsletterRoutes);
+app.use(`${API_PREFIX}/workflow`, applicationWorkflowRoutes);
+app.use(`${API_PREFIX}/company`, companyDashboardRoutes);
+app.use(`${API_PREFIX}/user`, userRoutes);
 
 // Welcome route
 app.get('/', (req, res) => {

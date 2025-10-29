@@ -104,9 +104,12 @@ const seedPaymentConfig = async () => {
 
     await Database.connectMongoDB();
 
-    // Clear existing configs
-    await PaymentConfig.deleteMany({});
-    logger.info('🗑️  Cleared existing payment configurations');
+    // Check if configs already exist
+    const existingConfigs = await PaymentConfig.countDocuments();
+    if (existingConfigs > 0) {
+      logger.info(`💳 Found ${existingConfigs} existing payment configurations, skipping seeding`);
+      process.exit(0);
+    }
 
     // Create new configs
     const createdConfigs = await PaymentConfig.create(paymentConfigs);

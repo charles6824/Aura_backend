@@ -174,3 +174,112 @@ export const updatePaymentConfig = async (req: AuthRequest, res: Response, next:
     next(error);
   }
 };
+
+// Admin functions
+export const getAllPayments = async (req: AuthRequest, res: Response, next: NextFunction) => {
+  try {
+    const { status, step, page = 1, limit = 10 } = req.query;
+    const query: any = {};
+    
+    if (status) query.status = status;
+    if (step) query.step = step;
+    
+    const payments = await Payment.find(query)
+      .populate('userId', 'name email')
+      .populate('applicationId', 'jobId')
+      .sort({ createdAt: -1 })
+      .limit(Number(limit))
+      .skip((Number(page) - 1) * Number(limit));
+    
+    const total = await Payment.countDocuments(query);
+    
+    res.json({
+      success: true,
+      data: {
+        payments,
+        pagination: {
+          currentPage: Number(page),
+          totalPages: Math.ceil(total / Number(limit)),
+          totalPayments: total
+        }
+      }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const adminVerifyPayment = async (req: AuthRequest, res: Response, next: NextFunction) => {
+  try {
+    const { id } = req.params;
+    
+    const payment = await Payment.findById(id);
+    if (!payment) {
+      return next(new AppError('Payment not found', 404));
+    }
+    
+    payment.status = 'confirmed';
+    payment.paidAt = new Date();
+    payment.confirmations = payment.requiredConfirmations;
+    await payment.save();
+    
+    // Update application
+    const application = await Application.findById(payment.applicationId);
+    if (application) {
+      application.paymentStatus[payment.step as keyof typeof application.paymentStatus] = 'paid';
+      await application.save();
+    }
+    
+    res.json({
+      success: true,
+      message: 'Payment verified successfully'
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const adminRejectPayment = async (req: AuthRequest, res: Response, next: NextFunction) => {
+  try {
+    const { id } = req.params;
+    const { reason } = req.body;
+    
+    const payment = await Payment.findById(id);
+    if (!payment) {
+      return next(new AppError('Payment not found', 404));
+    }
+    
+    payment.status = 'failed';
+    payment.failureReason = reason || 'Rejected by admin';
+    await payment.save();
+    
+    res.json({
+      success: true,
+      message: 'Payment rejected successfully'
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const requestPaymentRetry = async (req: AuthRequest, res: Response, next: NextFunction) => {
+  try {
+    const { id } = req.params;
+    
+    const payment = await Payment.findById(id);
+    if (!payment) {
+      return next(new AppError('Payment not found', 404));
+    }
+    
+    payment.status = 'pending';
+    payment.failureReason = undefined;
+    await payment.save();
+    
+    res.json({
+      success: true,
+      message: 'Payment retry requested successfully'
+    });
+  } catch (error) {
+    next(error);
+  }
+};

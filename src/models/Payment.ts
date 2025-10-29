@@ -17,6 +17,7 @@ export interface IPayment extends Document {
   requiredConfirmations: number;
   expiresAt: Date;
   paidAt?: Date;
+  failureReason?: string;
   metadata: {
     blockNumber?: number;
     gasUsed?: number;
@@ -94,6 +95,9 @@ const paymentSchema = new Schema<IPayment>({
   },
   paidAt: {
     type: Date
+  },
+  failureReason: {
+    type: String
   },
   metadata: {
     blockNumber: Number,

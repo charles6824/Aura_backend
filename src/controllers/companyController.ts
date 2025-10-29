@@ -214,6 +214,117 @@ export const getCompanyStats = async (req: AuthRequest, res: Response, next: Nex
   }
 };
 
+// Admin functions
+export const adminGetAllCompanies = async (req: AuthRequest, res: Response, next: NextFunction): Promise<Response | void> => {
+  try {
+    const { page = 1, limit = 10, status, search } = req.query;
+    
+    const filter: any = {};
+    if (status) filter.verificationStatus = status;
+    if (search) {
+      filter.$or = [
+        { name: { $regex: search, $options: 'i' } },
+        { email: { $regex: search, $options: 'i' } },
+        { location: { $regex: search, $options: 'i' } }
+      ];
+    }
+
+    const companies = await Company.find(filter)
+      .populate('userId', 'name email phone')
+      .limit(Number(limit))
+      .skip((Number(page) - 1) * Number(limit))
+      .sort({ createdAt: -1 });
+
+    const total = await Company.countDocuments(filter);
+
+    res.json({
+      success: true,
+      data: {
+        companies,
+        pagination: {
+          currentPage: Number(page),
+          totalPages: Math.ceil(total / Number(limit)),
+          totalCompanies: total
+        }
+      }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const adminApproveCompany = async (req: AuthRequest, res: Response, next: NextFunction): Promise<Response | void> => {
+  try {
+    const { id } = req.params;
+    
+    const company = await Company.findByIdAndUpdate(
+      id,
+      { 
+        verificationStatus: 'verified',
+        verificationNotes: 'Approved by admin'
+      },
+      { new: true }
+    ).populate('userId');
+
+    if (!company) {
+      return next(new AppError('Company not found', 404));
+    }
+
+    res.json({
+      success: true,
+      message: 'Company approved successfully',
+      data: { company }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const adminDeleteCompany = async (req: AuthRequest, res: Response, next: NextFunction): Promise<Response | void> => {
+  try {
+    const { id } = req.params;
+    
+    const company = await Company.findByIdAndDelete(id);
+    if (!company) {
+      return next(new AppError('Company not found', 404));
+    }
+
+    // Also delete the associated user account
+    await User.findByIdAndUpdate(company.userId, { isActive: false });
+
+    res.json({
+      success: true,
+      message: 'Company deleted successfully'
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const adminUpdateCompany = async (req: AuthRequest, res: Response, next: NextFunction): Promise<Response | void> => {
+  try {
+    const { id } = req.params;
+    
+    const company = await Company.findByIdAndUpdate(
+      id,
+      req.body,
+      { new: true, runValidators: true }
+    ).populate('userId');
+
+    if (!company) {
+      return next(new AppError('Company not found', 404));
+    }
+
+    res.json({
+      success: true,
+      message: 'Company updated successfully',
+      data: { company }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 // Helper function to generate company documents
 async function generateCompanyDocuments(company: any): Promise<void> {
   try {

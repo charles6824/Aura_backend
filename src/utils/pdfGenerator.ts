@@ -216,6 +216,59 @@ export class PDFGenerator {
     return fileName;
   }
 
+  static async generateOfferLetter(
+    user: IUser,
+    job: IJob,
+    company: ICompany,
+    offerDetails: any
+  ): Promise<string> {
+    const doc = new PDFDocument();
+    const fileName = `offer_letter_${user._id}_${Date.now()}.pdf`;
+    const filePath = path.join(process.cwd(), 'uploads', 'generated', fileName);
+    
+    this.ensureDirectoryExists(path.dirname(filePath));
+    doc.pipe(fs.createWriteStream(filePath));
+
+    // Header
+    doc.fontSize(20).text('EMPLOYMENT OFFER LETTER', { align: 'center' });
+    doc.moveDown();
+
+    // Date
+    doc.fontSize(12).text(`Date: ${new Date().toDateString()}`, { align: 'right' });
+    doc.moveDown();
+
+    // Recipient
+    doc.text(`Dear ${user.name},`);
+    doc.moveDown();
+
+    // Offer content
+    doc.text(`We are pleased to offer you the position of ${job.title} at ${company.companyName}.`);
+    doc.moveDown();
+
+    // Offer details
+    doc.text('Offer Details:');
+    doc.text(`- Position: ${job.title}`);
+    doc.text(`- Salary: ${offerDetails.salary}`);
+    doc.text(`- Start Date: ${new Date(offerDetails.startDate).toDateString()}`);
+    doc.text(`- Benefits: ${offerDetails.benefits?.join(', ') || 'As per company policy'}`);
+    doc.moveDown();
+
+    // Terms
+    doc.text('This offer is valid until: ' + new Date(offerDetails.expiryDate).toDateString());
+    doc.moveDown();
+
+    // Signature
+    doc.text('Please sign and return this letter to confirm your acceptance.');
+    doc.moveDown(2);
+    doc.text('Sincerely,');
+    doc.moveDown();
+    doc.text('HR Department');
+    doc.text(company.companyName);
+
+    doc.end();
+    return fileName;
+  }
+
   static async generateAssessmentCertificate(
     user: IUser,
     job: IJob,

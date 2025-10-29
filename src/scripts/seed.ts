@@ -334,12 +334,12 @@ const seedDatabase = async () => {
     // Connect to database
     await Database.connectMongoDB();
 
-    // Clear existing data
-    logger.info('🗑️  Clearing existing data...');
-    await User.deleteMany({});
-    await Job.deleteMany({});
-    await Application.deleteMany({});
-    await Assessment.deleteMany({});
+    // Check if data already exists
+    const existingUsers = await User.countDocuments();
+    if (existingUsers > 0) {
+      logger.info(`👥 Found ${existingUsers} existing users, skipping user seeding`);
+      process.exit(0);
+    }
 
     // Create users
     logger.info('👥 Creating users...');

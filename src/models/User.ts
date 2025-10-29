@@ -32,6 +32,7 @@ export interface IUser extends Document {
     name: string;
     uploadedAt: Date;
   }[];
+  savedJobs?: mongoose.Types.ObjectId[];
   isEmailVerified: boolean;
   emailVerificationToken?: string;
   passwordResetToken?: string;
@@ -160,6 +161,10 @@ const userSchema = new Schema<IUser>({
       type: Date,
       default: Date.now
     }
+  }],
+  savedJobs: [{
+    type: Schema.Types.ObjectId,
+    ref: 'Job'
   }],
   isEmailVerified: {
     type: Boolean,

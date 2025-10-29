@@ -58,6 +58,7 @@ export interface IApplication extends Document {
     workPermitLetter?: string;
     accommodationLetter?: string;
     flightBooking?: string;
+    signedContract?: string;
   };
   notes?: {
     author: mongoose.Types.ObjectId;
@@ -272,6 +273,9 @@ const applicationSchema = new Schema<IApplication>({
       type: String
     },
     flightBooking: {
+      type: String
+    },
+    signedContract: {
       type: String
     }
   },
