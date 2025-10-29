@@ -43,29 +43,27 @@ export const getUserApplications = async (req: AuthRequest, res: Response) => {
     const userId = req.user?.id;
     const page = parseInt(req.query.page as string) || 1;
     const limit = parseInt(req.query.limit as string) || 10;
+    const status = req.query.status as string;
     const skip = (page - 1) * limit;
 
-    const applications = await Application.find({ user: userId })
-      .populate('job', 'title company location salary')
-      .populate('company', 'name logo')
-      .sort({ createdAt: -1 })
+    const query: any = { userId };
+    if (status && status !== 'all') {
+      query.status = status;
+    }
+
+    const applications = await Application.find(query)
+      .populate('jobId', 'title company location salary')
+      .populate('companyId', 'name logo')
+      .sort({ appliedAt: -1 })
       .skip(skip)
       .limit(limit);
 
-    const total = await Application.countDocuments({ user: userId });
+    const total = await Application.countDocuments(query);
 
-    ApiResponse.success(res, {
-      applications,
-      pagination: {
-        page,
-        limit,
-        total,
-        pages: Math.ceil(total / limit)
-      }
-    }, 'Applications retrieved successfully');
+    return ApiResponse.success(res, applications, 'Applications retrieved successfully');
   } catch (error) {
     console.error('Get user applications error:', error);
-    ApiResponse.error(res, 'Failed to retrieve applications', 500);
+    return ApiResponse.error(res, 'Failed to retrieve applications', 500);
   }
 };
 
@@ -149,5 +147,104 @@ export const getSavedJobs = async (req: AuthRequest, res: Response) => {
   } catch (error) {
     console.error('Get saved jobs error:', error);
     return ApiResponse.error(res, 'Failed to retrieve saved jobs', 500);
+  }
+};
+
+export const getAvailableAssessments = async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.user?.id;
+    
+    // Get user's applications that have assessments
+    const applications = await Application.find({ 
+      userId, 
+      status: { $in: ['assessment_pending', 'assessment_completed'] }
+    })
+    .populate('jobId', 'title company');
+
+    const assessments = applications.map(app => ({
+      _id: `assessment_${app._id}`,
+      jobId: app.jobId,
+      status: (app as any).assessmentCompleted ? 'completed' : 'available',
+      questionCount: 10,
+      timeLimit: 3600,
+      cutoffScore: 70,
+      score: (app as any).assessmentScore,
+      passed: (app as any).assessmentPassed,
+      availableUntil: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) // 7 days from now
+    }));
+
+    return ApiResponse.success(res, { assessments }, 'Available assessments retrieved successfully');
+  } catch (error) {
+    console.error('Get available assessments error:', error);
+    return ApiResponse.error(res, 'Failed to retrieve assessments', 500);
+  }
+};
+
+export const startAssessment = async (req: AuthRequest, res: Response) => {
+  try {
+    const { assessmentId } = req.params;
+    const userId = req.user?.id;
+
+    // Mock assessment start - in real app, this would create a session
+    const assessment = {
+      _id: assessmentId,
+      status: 'in_progress',
+      startedAt: new Date(),
+      questions: [
+        {
+          _id: '1',
+          question: 'What is the primary purpose of object-oriented programming?',
+          type: 'multiple_choice',
+          options: ['To write faster code', 'To organize code into reusable objects', 'To reduce memory usage', 'To eliminate bugs'],
+          points: 10
+        },
+        {
+          _id: '2', 
+          question: 'Explain the concept of database normalization.',
+          type: 'essay',
+          points: 15
+        }
+      ]
+    };
+
+    return ApiResponse.success(res, { assessment }, 'Assessment started successfully');
+  } catch (error) {
+    console.error('Start assessment error:', error);
+    return ApiResponse.error(res, 'Failed to start assessment', 500);
+  }
+};
+
+export const submitAssessment = async (req: AuthRequest, res: Response) => {
+  try {
+    const { assessmentId } = req.params;
+    const { answers, timeSpent, securityData } = req.body;
+    const userId = req.user?.id;
+
+    // Mock scoring - in real app, this would calculate actual score
+    const score = Math.floor(Math.random() * 40) + 60; // Random score between 60-100
+    const passed = score >= 70;
+
+    // Update application with assessment results
+    await Application.updateMany(
+      { userId, _id: assessmentId.replace('assessment_', '') },
+      {
+        $set: {
+          assessmentCompleted: true,
+          assessmentScore: score,
+          assessmentPassed: passed,
+          status: passed ? 'assessment_completed' : 'rejected'
+        }
+      }
+    );
+
+    return ApiResponse.success(res, {
+      score,
+      passed,
+      timeSpent,
+      submittedAt: new Date()
+    }, 'Assessment submitted successfully');
+  } catch (error) {
+    console.error('Submit assessment error:', error);
+    return ApiResponse.error(res, 'Failed to submit assessment', 500);
   }
 };

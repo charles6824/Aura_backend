@@ -5,7 +5,10 @@ import {
   getUserApplications,
   saveJob,
   unsaveJob,
-  getSavedJobs
+  getSavedJobs,
+  getAvailableAssessments,
+  startAssessment,
+  submitAssessment
 } from '../controllers/userController';
 
 const router = Router();
@@ -94,5 +97,59 @@ router.delete('/jobs/:jobId/unsave', unsaveJob as any);
  *         description: Saved jobs retrieved successfully
  */
 router.get('/saved-jobs', getSavedJobs as any);
+
+/**
+ * @swagger
+ * /user/assessments/available:
+ *   get:
+ *     summary: Get available assessments
+ *     tags: [User]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Available assessments retrieved successfully
+ */
+router.get('/assessments/available', getAvailableAssessments as any);
+
+/**
+ * @swagger
+ * /user/assessments/{assessmentId}/start:
+ *   post:
+ *     summary: Start an assessment
+ *     tags: [User]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: assessmentId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Assessment started successfully
+ */
+router.post('/assessments/:assessmentId/start', startAssessment as any);
+
+/**
+ * @swagger
+ * /user/assessments/{assessmentId}/submit:
+ *   post:
+ *     summary: Submit assessment answers
+ *     tags: [User]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: assessmentId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Assessment submitted successfully
+ */
+router.post('/assessments/:assessmentId/submit', submitAssessment as any);
 
 export default router;
