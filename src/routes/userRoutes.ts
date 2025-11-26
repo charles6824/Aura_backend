@@ -13,7 +13,8 @@ import {
   getUserDocuments,
   getUserOffers,
   getUserMessages,
-  sendMessageToAdmin
+  sendMessageToAdmin,
+  createPayment
 } from '../controllers/userController';
 
 const router = Router();
@@ -158,6 +159,7 @@ router.post('/assessments/:assessmentId/start', startAssessment as any);
 router.post('/assessments/:assessmentId/submit', submitAssessment as any);
 
 router.get('/payments', getUserPayments as any);
+router.post('/payments/create', createPayment as any);
 router.get('/documents', getUserDocuments as any);
 router.get('/offers', getUserOffers as any);
 router.get('/messages', getUserMessages as any);

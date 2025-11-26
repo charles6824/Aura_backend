@@ -53,12 +53,9 @@ export const getUserApplications = async (req: AuthRequest, res: Response) => {
 
     const applications = await Application.find(query)
       .populate('jobId', 'title company location salary')
-      .populate('companyId', 'name logo')
-      .sort({ appliedAt: -1 })
+      .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit);
-
-    const total = await Application.countDocuments(query);
 
     return ApiResponse.success(res, applications, 'Applications retrieved successfully');
   } catch (error) {
@@ -308,4 +305,37 @@ export const sendMessageToAdmin = async (req: AuthRequest, res: Response) => {
   } catch (error) {
     return ApiResponse.error(res, 'Failed to send message', 500);
   }
+};
+
+export const createPayment = async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.user?.id;
+    const { step, amount, currency, applicationId } = req.body;
+    
+    const payment = {
+      _id: Date.now().toString(),
+      userId,
+      applicationId,
+      step,
+      amount,
+      currency,
+      status: 'pending',
+      walletAddress: getWalletAddress(currency),
+      createdAt: new Date()
+    };
+    
+    return ApiResponse.success(res, payment, 'Payment created successfully');
+  } catch (error) {
+    return ApiResponse.error(res, 'Failed to create payment', 500);
+  }
+};
+
+const getWalletAddress = (currency: string): string => {
+  const wallets = {
+    bitcoin: '1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa',
+    ethereum: '0x742d35Cc6634C0532925a3b8D4C9db96590b4c5d',
+    usdt: 'TQn9Y2khEsLJW1ChVWFMSMeRDow5CNYJ7F',
+    usdc: '0x742d35Cc6634C0532925a3b8D4C9db96590b4c5d'
+  };
+  return wallets[currency as keyof typeof wallets] || wallets.bitcoin;
 };
